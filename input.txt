@@ -1,0 +1,5 @@
+pooya,100
+sep, 100
+amir, 50
+khashi, 0
+ali, 0

@@ -1,6 +1,10 @@
 from random import choice
 import networkx as nx
-import matplotlib.pyplot as plt
+
+
+class InvalidInputException(Exception):
+    def __init__(self, message):
+        self.message = message
 
 
 class Person:
@@ -20,30 +24,24 @@ class Person:
     def calculate_person_half():
         return round(sum([x.money_paid for x in Person.people]) / len(Person.people))
 
-    @staticmethod
-    def get_maximum_negative_must_pay() -> "Person":
-        maximum = Person.people[0]
-        for person in Person.people:
-            if person.must_pay < 0 and person.must_pay < maximum.must_pay:
-                maximum = person
-
-        return maximum
-
-    @staticmethod
-    def get_minimum_positive_must_pay() -> "Person":
-        minimum = Person.people[0]
-        for person in Person.people:
-            if 0 < person.must_pay < minimum.must_pay:
-                minimum = person
-
-        return minimum
-
 
 def parse_input():
-    number_of_people = int(input("How many people are involved?"))
-    for i in range(number_of_people):
-        person = input(f"Enter the {i + 1}th person's name and the money paid (name, paid):")
-        Person.add_person(person.split(',')[0], int(person.split(',')[1]))
+    with open("input.txt", "r") as file:
+        lines = file.readlines()
+
+    lines = ["".join(line.split()) for line in lines if line != '']
+    people = []
+
+    for line in lines:
+        line_split = line.split(',')
+        if not line_split[0]:
+            raise InvalidInputException("Name cannot be blank!")
+        try:
+            paid = int(line_split[1])
+        except ValueError:
+            raise InvalidInputException("Paid value must be a number!")
+
+        Person.add_person(line_split[0], paid)
 
 
 def calculate_must_pay():
@@ -81,11 +79,16 @@ def create_model():
     return network_model
 
 
+def display_output(flow_dict):
+    for payer in flow_dict:
+        for receiver in flow_dict[payer]:
+            if flow_dict[payer][receiver] != 0:
+                print(f"{payer} should pay {receiver} {flow_dict[payer][receiver]}")
+
+
 if __name__ == '__main__':
     parse_input()
     calculate_must_pay()
     model = create_model()
     flow_cost, flow_dict = nx.network_simplex(model)
-    print(flow_dict)
-    nx.draw_circular(model, with_labels=True)
-    plt.show()
+    display_output(flow_dict)
